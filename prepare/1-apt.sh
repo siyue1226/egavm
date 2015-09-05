@@ -34,11 +34,17 @@ fi
 
 
 
-# I want life easier.
+# Virtual machines needn't this and I want life easier.
 # https://help.ubuntu.com/lts/serverguide/apparmor.html
-echo "==> Disable AppArmor"
-sudo service apparmor stop
-sudo update-rc.d -f apparmor remove
+if [ "$(whoami)" == "vagrant" ]; then
+    echo "==> Disable AppArmor"
+    sudo service apparmor stop
+    sudo update-rc.d -f apparmor remove
+fi
+
+echo "==> Disable whoopsie"
+sudo sed -i 's/report_crashes=true/report_crashes=false/' /etc/default/whoopsie
+sudo service whoopsie stop
 
 echo "==> Install linuxbrew dependences"
 sudo apt-get -y update
@@ -49,7 +55,7 @@ echo "==> Install java"
 sudo apt-get -y install openjdk-7-jre openjdk-7-jdk ant
 
 echo "==> Install other softwares"
-sudo apt-get -y install parallel vim graphviz screen unzip libdb-dev libedit-dev libgd-dev libreadline-dev libpng-dev libxml2-dev
+sudo apt-get -y install csh parallel vim graphviz screen unzip libdb-dev libedit-dev libgd-dev libreadline-dev libpng-dev libxml2-dev
 
 echo "==> Install gsl"
 sudo apt-get -y install libgsl0ldbl libgsl0-dev
@@ -67,8 +73,10 @@ echo "==> Install gtk3 related tools"
 sudo apt-get -y install xvfb glade
 
 # install mongodb and redis by apt.
-echo "==> Install mongodb"
-sudo apt-get -y install mongodb
+if [ "$(whoami)" == "vagrant" ]; then
+    echo "==> Install mongodb"
+    sudo apt-get -y install mongodb
+fi
 
 echo "==> Install redis"
 sudo apt-get -y install redis-server
@@ -77,5 +85,10 @@ sudo apt-get -y install redis-server
 # remove system provided mysql package to avoid confusing linuxbrew.
 echo "==> Remove system provided mysql"
 sudo apt-get -y purge mysql-common
+
+if [ -n "$DISPLAY" ]; then
+    echo "==> Install nautilus plugins"
+    sudo apt-get -y install nautilus-open-terminal nautilus-actions
+fi
 
 echo "Basic software installation complete!"
